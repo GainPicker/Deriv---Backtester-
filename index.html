@@ -1165,56 +1165,58 @@
         // 2. STRATEGY ENGINE
         // =========================================================
         document.getElementById('runBtn').addEventListener('click', runBacktest);
+
         function runBacktest() {
-            const btn = document.getElementById('runBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Running...';
-            setTimeout(() => {
-                try {
-                    const rawData = data;
-                    const prices = rawData.map(d => d.close);
-                    const times = rawData.map(d => d.time);
-                    // SMA Crossover strategy
-                    const fastPeriod = 9;
-                    const slowPeriod = 21;
-                    let position = null; // 'buy' or 'sell'
-                    const trades = [];
-                    let balance = 10000;
-                    const equityCurve = [];
-                    let highestBalance = balance;
-                    let maxDrawdown = 0;
-                    for (let i = slowPeriod; i < prices.length; i++) {
-                        const fastMA = prices.slice(i - fastPeriod, i).reduce((a,b) => a+b, 0) / fastPeriod;
-                        const slowMA = prices.slice(i - slowPeriod, i).reduce((a,b) => a+b, 0) / slowPeriod;
-                        const signal = fastMA > slowMA ? 'buy' : 'sell';
-                        if (position === null) {
-                            position = signal;
-                        } else if (signal !== position) {
-                            // Close trade and open new one
-                            trades.push({
-                                time: times[i],
-                                type: position === 'buy' ? 'SELL' : 'BUY',
-                                price: prices[i],
-                                size: balance / prices[i]
-                            });
-                            position = signal;
-                        }
-                        balance += (prices[i] - prices[i-1]) * (balance / prices[i-1]); // rough pnl
-                        equityCurve.push(balance);
-                        if (balance > highestBalance) highestBalance = balance;
-                        const dd = ((highestBalance - balance) / highestBalance) * 100;
-                        if (dd > maxDrawdown) maxDrawdown = dd;
-                    }
-                    // Display Results
-                    displayResults(rawData, times, prices, trades, equityCurve, maxDrawdown);
-                } catch (e) {
-                    alert('Error running backtest: ' + e.message);
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = '▶ Run Backtest';
-                }
-            }, 100);
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Running...';
+
+    try {
+        const rawData = data;
+        const prices = rawData.map(d => d.close);
+        const times = rawData.map(d => d.time);
+
+        const fastPeriod = 9;
+        const slowPeriod = 21;  // <-- This is now defined globally for the function
+
+        let position = null;
+        const trades = [];
+        let balance = 10000;
+        const equityCurve = [];
+        let highestBalance = balance;
+        let maxDrawdown = 0;
+
+        for (let i = slowPeriod; i < prices.length; i++) {
+            const fastMA = prices.slice(i - fastPeriod, i).reduce((a,b) => a+b, 0) / fastPeriod;
+            const slowMA = prices.slice(i - slowPeriod, i).reduce((a,b) => a+b, 0) / slowPeriod;
+            const signal = fastMA > slowMA ? 'buy' : 'sell';
+
+            if (position === null) {
+                position = signal;
+            } else if (signal !== position) {
+                trades.push({
+                    time: times[i],
+                    type: position === 'buy' ? 'SELL' : 'BUY',
+                    price: prices[i],
+                    size: balance / prices[i]
+                });
+                position = signal;
+            }
+            balance += (prices[i] - prices[i-1]) * (balance / prices[i-1]);
+            equityCurve.push(balance);
+            if (balance > highestBalance) highestBalance = balance;
+            const dd = ((highestBalance - balance) / highestBalance) * 100;
+            if (dd > maxDrawdown) maxDrawdown = dd;
         }
+        displayResults(rawData, times, prices, trades, equityCurve, maxDrawdown);
+
+    } catch (e) {
+        alert('Error running backtest: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '▶ Run Backtest';
+    }
+}
         // =========================================================
         // 3. DISPLAY & CHARTS
         // =========================================================
