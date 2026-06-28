@@ -1218,7 +1218,8 @@
         // =========================================================
         // 3. DISPLAY & CHARTS
         // =========================================================
-        function displayResults(rawData, times, prices, trades, equityCurve, maxDrawdown) {
+
+     function displayResults(rawData, times, prices, trades, equityCurve, maxDrawdown) {
             document.getElementById('resultsArea').style.display = 'block';
             document.getElementById('infoPoints').textContent = rawData.length;
             document.getElementById('infoRange').textContent = `${new Date(times[0]).toLocaleDateString()} to ${new Date(times[times.length-1]).toLocaleDateString()}`;
@@ -1278,7 +1279,7 @@
         // =========================================================
         window.addEventListener('load', () => {
             setTimeout(runBacktest, 500);
-        });
+        });   
     </script>
 </body>
 </html>
